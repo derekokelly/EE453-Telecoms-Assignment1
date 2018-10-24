@@ -49,9 +49,7 @@ def main():
             elif distribution == "erlang":
                 call_length = sp.erlang.rvs(1, size = num_calls, scale = 3)
             elif distribution == "exponential":
-                call_length = []
-                for i in range(0, num_calls):
-                    call_length.append(random.randint(0, 60))
+                call_length = numpy.random.standard_exponential(num_calls)
 
             print("Distribution:", distribution)
 
