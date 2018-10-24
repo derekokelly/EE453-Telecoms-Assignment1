@@ -6,13 +6,15 @@ import scipy.stats as sp
 import matplotlib.pyplot as plot
 import matplotlib.patches as patches
 from phoneLine import PhoneLine
+import time
 
 # Amount of phone lines
 n = 25
 # List of traffic for Erlang calculation
 amount_of_calls = [10, 20, 30, 50, 75, 100, 150, 250, 500, 1000, 2000, 5000]
 distributions = ["gamma", "erlang", "exponential"]
-# distributions = ["gamma", "exponential"]
+
+start_time = time.time()
 
 # Main function
 def main():
@@ -53,7 +55,7 @@ def main():
 
             print("Distribution:", distribution)
 
-            # Set sums of GOS to 0
+            # Set values to 0
             sum_erlang_gos = 0
             sum_sim_gos = 0
 
@@ -145,6 +147,9 @@ def main():
         plot.legend(handles=[r_patch, b_patch])
 
         plot.show()
+    
+    print("--- %s seconds ---" % (time.time() - start_time))
+    print()
 
 # ErlangB formula
 def ErlangB (n, A0):
