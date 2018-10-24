@@ -9,7 +9,7 @@ from phoneLine import PhoneLine
 import time
 
 # Amount of phone lines
-n = 25
+n = 20
 # List of traffic for Erlang calculation
 amount_of_calls = [10, 20, 30, 50, 75, 100, 150, 250, 500, 1000, 2000, 5000]
 distributions = ["gamma", "erlang", "exponential"]
