@@ -1,6 +1,5 @@
 # Imports
 import math
-import random
 import numpy
 import scipy
 import matplotlib.pyplot as plot
@@ -15,7 +14,7 @@ amount_of_calls = [10, 25, 50, 100, 250, 500, 1000, 2000]
 # Main function
 def main():
     
-    print("\n----------------\n")
+    print("\n------------------------\n")
 
     # Print amount of calls
     for call in amount_of_calls:
@@ -23,7 +22,7 @@ def main():
     
     # Print number of lines
     print("\nNumber of lines:", n)
-    print("\n----------------\n")
+    print("\n------------------------\n")
 
     for num_calls in amount_of_calls:
         # Create phone lines array to hold PhoneLine objects
@@ -52,8 +51,8 @@ def main():
         # Loop through calls
         for i in range(0, num_calls):
             call_accepted = False
-            current_call_start = call_start_times[i]
-            current_call_end = (call_start_times[i] + call_length[i])
+            current_call_start_time = call_start_times[i]
+            current_call_end_time = (call_start_times[i] + call_length[i])
 
             line_number = 0
 
@@ -62,9 +61,9 @@ def main():
                 line_number += 1
 
                 # Check if line is free
-                if line.call_end <= current_call_start:
-                    line.call_start = current_call_start
-                    line.call_end = current_call_end
+                if line.end_time <= current_call_start_time:
+                    line.start_time = current_call_start_time
+                    line.end_time = current_call_end_time
                     call_accepted = True
                     break
 
@@ -82,7 +81,7 @@ def main():
         print("Erlang GOS:", erlang_gos)
         print("Simulated GOS:", (num_calls_rejected/num_calls))
 
-        print("\n----------------\n")
+        print("\n------------------------\n")
 
 # ErlangB formula
 def ErlangB (n, A0):

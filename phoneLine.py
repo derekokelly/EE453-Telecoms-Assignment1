@@ -1,5 +1,5 @@
 class PhoneLine(object):
 
-    def __init__(self, call_start, call_end):
-        self.call_start = call_start
-        self.call_end = call_end
+    def __init__(self, start_time, end_time):
+        self.start_time = start_time
+        self.end_time = end_time
