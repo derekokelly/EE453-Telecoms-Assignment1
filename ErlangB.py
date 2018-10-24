@@ -1,7 +1,8 @@
 # Imports
 import math
+import random
 import numpy
-import scipy
+import scipy.stats as sp
 import matplotlib.pyplot as plot
 import matplotlib.patches as patches
 from phoneLine import PhoneLine
@@ -9,7 +10,9 @@ from phoneLine import PhoneLine
 # Amount of phone lines
 n = 25
 # List of traffic for Erlang calculation
-amount_of_calls = [10, 25, 50, 100, 250, 500, 1000, 2000]
+amount_of_calls = [10, 20, 30, 50, 75, 100, 150, 250, 500, 1000, 2000, 5000]
+distributions = ["gamma", "erlang", "exponential"]
+# distributions = ["gamma", "exponential"]
 
 # Main function
 def main():
@@ -25,81 +28,123 @@ def main():
     print("\nNumber of lines:", n)
     print("\n------------------------\n")
 
-    num_sims = 10
+    num_sims = 50
 
-    # Loop through different call amounts
-    for num_calls in amount_of_calls:
+    # Loop through distributions
+    for distribution in distributions:
 
-        # Set sums of GOS to 0
-        sum_erlang_gos = 0
-        sum_sim_gos = 0
+        erlang_gos_array = numpy.empty(len(amount_of_calls))
+        sim_gos_array = numpy.empty(len(amount_of_calls))
 
-        # Loop through simulations
-        for i in range(0, num_sims):
-            # Putting this inside the above for loop clears the lines while moving on to the next simulation
+        call_num = 0
 
-            # Create phone lines array to hold PhoneLine objects
-            phone_lines = []
+        # Loop through different call amounts
+        for num_calls in amount_of_calls:
 
-            for i in range(0, n):
-                # Store PhoneLine objects in array with 0 start time and 0 end time
-                phone_lines.append(PhoneLine(0, 0))
+            # Choose distribution
+            if distribution == "gamma":
+                call_length = numpy.random.standard_gamma(3, num_calls)
+            elif distribution == "erlang":
+                call_length = sp.erlang.rvs(1, size = num_calls, scale = 3)
+            elif distribution == "exponential":
+                call_length = []
+                for i in range(0, num_calls):
+                    call_length.append(random.randint(0, 60))
 
-            # Generate call start times based off a random uniform distribution, sorted by earliest start time
-            call_start_times = sorted(numpy.random.uniform(0, 60, num_calls))
-            # Generate call holding times based off gamma distribution with mean centred around 3 mins
-            call_length = numpy.random.standard_gamma(3, num_calls)
-            
-            # Get average call length
-            avg_call_length = (sum(call_length) / len(call_length))
+            print("Distribution:", distribution)
 
-            # Keep track of amount of calls accepted & rejected
-            num_calls_accepted = 0
-            num_calls_rejected = 0
+            # Set sums of GOS to 0
+            sum_erlang_gos = 0
+            sum_sim_gos = 0
 
-            # Loop through calls
-            for i in range(0, num_calls):
-                call_accepted = False
-                current_call_start_time = call_start_times[i]
-                current_call_end_time = (call_start_times[i] + call_length[i])
+            erlang_gos = 0
+            sim_gos = 0
 
-                line_number = 0
+            # Loop through simulations
+            for i in range(0, num_sims):
 
-                # Loop through phone lines
-                for line in phone_lines:
-                    line_number += 1
+                # Putting this inside the above for loop clears the lines while moving on to the next simulation
+                # Create phone lines array to hold PhoneLine objects
+                phone_lines = []
 
-                    # Check if line is free
-                    if line.end_time <= current_call_start_time:
-                        line.start_time = current_call_start_time
-                        line.end_time = current_call_end_time
-                        call_accepted = True
-                        # We don't need to check any more lines, so break from for loop
-                        break
+                for i in range(0, n):
+                    # Store PhoneLine objects in array with 0 start time and 0 end time
+                    phone_lines.append(PhoneLine(0, 0))
 
-                # Tally calls accepted & rejected
-                if call_accepted:
-                        num_calls_accepted += 1
-                else:
-                        num_calls_rejected += 1
+                # Generate call start times based off a random uniform distribution, sorted by earliest start time
+                call_start_times = sorted(numpy.random.uniform(0, 60, num_calls))
+                
+                # Get average call length
+                avg_call_length = (sum(call_length) / len(call_length))
 
-            # ErlangB calculation
-            traffic = num_calls * (avg_call_length / 60)
-            erlang_gos = ErlangB(n, traffic)
+                # Keep track of amount of calls accepted & rejected
+                num_calls_accepted = 0
+                num_calls_rejected = 0
 
-            # Simulation calculation
-            sim_gos = num_calls_rejected/num_calls
+                # Loop through calls
+                for i in range(0, num_calls):
+                    call_accepted = False
+                    current_call_start_time = call_start_times[i]
+                    current_call_end_time = (call_start_times[i] + call_length[i])
 
-            # Sum GOS values to find average later
-            sum_erlang_gos += erlang_gos
-            sum_sim_gos += sim_gos
+                    line_number = 0
+
+                    # Loop through phone lines
+                    for line in phone_lines:
+                        line_number += 1
+
+                        # Check if line is free
+                        if line.end_time <= current_call_start_time:
+                            line.start_time = current_call_start_time
+                            line.end_time = current_call_end_time
+                            call_accepted = True
+                            # We don't need to check any more lines, so break from for loop
+                            break
+
+                    # Tally calls accepted & rejected
+                    if call_accepted:
+                            num_calls_accepted += 1
+                    else:
+                            num_calls_rejected += 1
+
+                # ErlangB calculation
+                traffic = num_calls * (avg_call_length / 60)
+                erlang_gos = ErlangB(n, traffic)
+
+                # Simulation calculation
+                sim_gos = num_calls_rejected/num_calls
+
+                # Sum GOS values to find average later
+                sum_erlang_gos += erlang_gos
+                sum_sim_gos += sim_gos
+
+            avg_erlang_gos = sum_erlang_gos / num_sims
+            avg_sim_gos = sum_sim_gos / num_sims
+
+            print("For", num_calls, "calls:")
+            print("Avg Erlang GOS:", avg_erlang_gos)
+            print("Avg Simulated GOS:", avg_sim_gos, "\n")
+
+            erlang_gos_array[call_num] = avg_erlang_gos
+            sim_gos_array[call_num] = avg_sim_gos
+
+            call_num += 1
+
+        print("\n------------------------\n")
+
         
-        avg_erlang_gos = sum_erlang_gos / num_sims
-        avg_sim_gos = sum_sim_gos / num_sims
+        plot.plot(amount_of_calls, erlang_gos_array, 'r')
+        plot.plot(amount_of_calls, sim_gos_array, 'b')
 
-        print("For", num_calls, "calls")
-        print("Avg Erlang GOS:", avg_erlang_gos)
-        print("Avg Simulated GOS:", avg_sim_gos, "\n")
+        plot.suptitle("GOS vs. No. of Calls for " + distribution + " distribution")
+        plot.xlabel("Number of Calls")
+        plot.ylabel("Grade of Service")
+
+        r_patch = patches.Patch(color='red', label='Erlang GOS')
+        b_patch = patches.Patch(color='blue', label='Simulated GOS')
+        plot.legend(handles=[r_patch, b_patch])
+
+        plot.show()
 
 # ErlangB formula
 def ErlangB (n, A0):
