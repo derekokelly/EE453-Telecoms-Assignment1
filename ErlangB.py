@@ -15,17 +15,19 @@ amount_of_calls = [500]
 # Main function
 def main():
     
-    print("\n--------\n")
+    print("\n----------------\n")
 
-    # Print amount of calls & lines
+    # Print amount of calls
     for call in amount_of_calls:
-        print("Traffic: ", call, " calls")
-        print("Number of lines: ", n)
-        print("\n--------\n")
+        print("Traffic:", call, "calls")
     
-    # Generate call start times based off a random uniform distribution
+    # Print number of lines
+    print("Number of lines:", n)
+    print("\n----------------\n")
+    
+    # Generate call start times based off a random uniform distribution, sorted by earliest start time
     call_start_times = sorted(numpy.random.uniform(0, 60, call))
-    # Generate call holding times based off gamma distribution
+    # Generate call holding times based off gamma distribution with mean centred around 3 mins
     call_length = numpy.random.standard_gamma(3, call)
     
     # Get average call length
@@ -66,18 +68,15 @@ def main():
         else:
                 num_calls_rejected += 1
 
-    print("\n--------\n")
-
-    print("Calls accepted: ", num_calls_accepted)
-    print("Calls rejected: ", num_calls_rejected)
+    print("Calls rejected:", num_calls_rejected, "/ 500")
 
     # ErlangB calculation
     traffic = call * (ave_call_length / 60)
     erlang_gos = ErlangB(n, traffic)
-    print("Erlang GOS: ", erlang_gos)
-    print("Simulated GOS: ", (num_calls_rejected/call))
+    print("Erlang GOS:", erlang_gos)
+    print("Simulated GOS:", (num_calls_rejected/call))
 
-    print("\n--------\n")
+    print("\n----------------\n")
 
 # ErlangB formula
 def ErlangB (n, A0):
