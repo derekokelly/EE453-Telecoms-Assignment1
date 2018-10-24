@@ -10,7 +10,7 @@ from phoneLine import PhoneLine
 # Amount of phone lines
 n = 25
 # List of traffic for Erlang calculation
-amount_of_calls = [500]
+amount_of_calls = [10, 25, 50, 100, 250, 500, 1000, 2000]
 
 # Main function
 def main():
@@ -22,61 +22,67 @@ def main():
         print("Traffic:", call, "calls")
     
     # Print number of lines
-    print("Number of lines:", n)
+    print("\nNumber of lines:", n)
     print("\n----------------\n")
-    
-    # Generate call start times based off a random uniform distribution, sorted by earliest start time
-    call_start_times = sorted(numpy.random.uniform(0, 60, call))
-    # Generate call holding times based off gamma distribution with mean centred around 3 mins
-    call_length = numpy.random.standard_gamma(3, call)
-    
-    # Get average call length
-    ave_call_length = (sum(call_length) / len(call_length))
 
-    phone_lines = []
+    for num_calls in amount_of_calls:
+        # Create phone lines array to hold PhoneLine objects
+        phone_lines = []
 
-    for i in range(0, n):
-        # Store PhoneLine objects in array with 0 start time and 0 end time
-        phone_lines.append(PhoneLine(0, 0))
+        # Putting this inside the for loop clears the lines while moving on to the next traffic amount
 
-    # Keep track of amount of calls accepted & rejected
-    num_calls_accepted = 0
-    num_calls_rejected = 0
+        for i in range(0, n):
+            # Store PhoneLine objects in array with 0 start time and 0 end time
+            phone_lines.append(PhoneLine(0, 0))
 
-    # Loop through calls
-    for i in range(0, call):
-        call_accepted = False
-        current_call_start = call_start_times[i]
-        current_call_end = (call_start_times[i] + call_length[i])
+        # Generate call start times based off a random uniform distribution, sorted by earliest start time
+        call_start_times = sorted(numpy.random.uniform(0, 60, num_calls))
+        # Generate call holding times based off gamma distribution with mean centred around 3 mins
+        call_length = numpy.random.standard_gamma(3, num_calls)
+        
+        # Get average call length
+        ave_call_length = (sum(call_length) / len(call_length))
 
-        line_number = 0
+        print("Simulating", num_calls, "calls")
 
-        # Loop through phone lines
-        for line in phone_lines:
-            line_number += 1
+        # Keep track of amount of calls accepted & rejected
+        num_calls_accepted = 0
+        num_calls_rejected = 0
 
-            # Check if line is free
-            if line.call_end <= current_call_start:
-                line.call_start = current_call_start
-                line.call_end = current_call_end
-                call_accepted = True
-                break
+        # Loop through calls
+        for i in range(0, num_calls):
+            call_accepted = False
+            current_call_start = call_start_times[i]
+            current_call_end = (call_start_times[i] + call_length[i])
 
-        # Tally calls accepted & rejected
-        if call_accepted:
-                num_calls_accepted += 1
-        else:
-                num_calls_rejected += 1
+            line_number = 0
 
-    print("Calls rejected:", num_calls_rejected, "/ 500")
+            # Loop through phone lines
+            for line in phone_lines:
+                line_number += 1
 
-    # ErlangB calculation
-    traffic = call * (ave_call_length / 60)
-    erlang_gos = ErlangB(n, traffic)
-    print("Erlang GOS:", erlang_gos)
-    print("Simulated GOS:", (num_calls_rejected/call))
+                # Check if line is free
+                if line.call_end <= current_call_start:
+                    line.call_start = current_call_start
+                    line.call_end = current_call_end
+                    call_accepted = True
+                    break
 
-    print("\n----------------\n")
+            # Tally calls accepted & rejected
+            if call_accepted:
+                    num_calls_accepted += 1
+            else:
+                    num_calls_rejected += 1
+
+        print("Calls rejected:", num_calls_rejected, "/", num_calls)
+
+        # ErlangB calculation
+        traffic = num_calls * (ave_call_length / 60)
+        erlang_gos = ErlangB(n, traffic)
+        print("Erlang GOS:", erlang_gos)
+        print("Simulated GOS:", (num_calls_rejected/num_calls))
+
+        print("\n----------------\n")
 
 # ErlangB formula
 def ErlangB (n, A0):
